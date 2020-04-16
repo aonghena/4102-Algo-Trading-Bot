@@ -9,6 +9,9 @@ import (
 	"time"
 )
 
+/**
+Structs used to handle API json data aswell as Portfolios for trading
+*/
 type PoloniexExchange map[string]struct {
 	ID            int    `json:"id"`
 	Last          string `json:"last"`
@@ -54,9 +57,9 @@ type Portfolio struct {
 	IsLong      bool
 }
 
-var btc Portfolio
-
-//Calculates moving average
+/**
+Calculates the moving average by using the trade history and the period (mov)
+*/
 func movingAVG(l []Last, mov int) float64 {
 	avg := 0.0
 	for x := 0; x < mov; x++ {
@@ -67,7 +70,9 @@ func movingAVG(l []Last, mov int) float64 {
 	return avg
 }
 
-//Get Historic prices from the last x transactions to calculate moving average for algorithm
+/**
+Gets historical prices of the trading pair from the API
+*/
 func getLast(pair string) []Last {
 	url := "https://poloniex.com/public?command=returnTradeHistory&currencyPair=" + pair
 	method := "GET"
@@ -90,7 +95,9 @@ func getLast(pair string) []Last {
 
 }
 
-//Gets Current price Spread for currency pair
+/**
+Gets the current price and spread from the API
+*/
 func getSpread(s string) CurrencyPair {
 	url := "https://poloniex.com/public?command=returnTicker"
 	method := "GET"
@@ -108,6 +115,7 @@ func getSpread(s string) CurrencyPair {
 	textBytes := []byte((body))
 
 	people1 := PoloniexExchange{}
+	//one line if/else to error check
 	if err1 := json.Unmarshal(textBytes, &people1); err1 != nil {
 		fmt.Println(err)
 	}
@@ -115,6 +123,9 @@ func getSpread(s string) CurrencyPair {
 
 }
 
+/**
+Function to conduct trades
+*/
 func trade(p Portfolio, mov int) Portfolio {
 	moving := movingAVG(getLast(p.TradingPair), mov)
 	spreadInfo := getSpread(p.TradingPair)
@@ -159,6 +170,9 @@ func trade(p Portfolio, mov int) Portfolio {
 	return p
 }
 
+/**
+Trade Confimation output which is run concurrent
+*/
 func tradeConfirmation(p Portfolio, pr float64) {
 	if pr != -999 {
 		fmt.Printf("Profit/Loss from trade %f\n", pr)
@@ -167,6 +181,9 @@ func tradeConfirmation(p Portfolio, pr float64) {
 
 }
 
+/**
+Initilizes portfolio vales
+*/
 func createPortfolio(tradingPair string, cash float64) Portfolio {
 	return Portfolio{tradingPair, cash, 0.0, 0.0, cash, false, false}
 }
@@ -181,7 +198,7 @@ func main() {
 	for {
 		btc = trade(btc, m)
 		eth = trade(eth, m)
-		time.Sleep(10000000000)
+		time.Sleep(10000000000) //pauses in order to stay inline with API call limitations
 	}
 
 }
