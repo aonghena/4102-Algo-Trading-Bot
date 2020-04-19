@@ -125,6 +125,9 @@ func getSpread(s string) CurrencyPair {
 
 /**
 Function to conduct trades
+*
+Trades are based of off moving average for period as well as previous price.
+*
 */
 func trade(p Portfolio, mov int) Portfolio {
 	moving := movingAVG(getLast(p.TradingPair), mov)
@@ -174,11 +177,8 @@ func trade(p Portfolio, mov int) Portfolio {
 Trade Confimation output which is run concurrent
 */
 func tradeConfirmation(p Portfolio, pr float64) {
-	if pr != -999 {
-		fmt.Printf("Profit/Loss from trade %f\n", pr)
-		fmt.Printf("Cash: %f  Profit: $%f \n", p.Cash, p.Profit)
-	}
-
+	fmt.Printf("Profit/Loss from trade %f\n", pr)
+	fmt.Printf("Cash: %f  Profit: $%f \n", p.Cash, p.Profit)
 }
 
 /**
@@ -193,7 +193,7 @@ func main() {
 	fmt.Println("Status: Online")
 	btc := createPortfolio("USDT_BTC", 10000.00)
 	eth := createPortfolio("USDT_ETH", 1000.00)
-
+	//using the last 199 trades as moving average
 	m := 199
 	for {
 		btc = trade(btc, m)
