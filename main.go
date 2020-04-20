@@ -10,8 +10,9 @@ import (
 )
 
 /**
-Structs used to handle API json data aswell as Portfolios for trading
+Structs used to handle API json data as well as Portfolios for trading
 */
+//poleniex spread data
 type PoloniexExchange map[string]struct {
 	ID            int    `json:"id"`
 	Last          string `json:"last"`
@@ -24,6 +25,20 @@ type PoloniexExchange map[string]struct {
 	High24Hr      string `json:"high24hr"`
 	Low24Hr       string `json:"low24hr"`
 }
+
+//last price data
+type Last struct {
+	GlobalTradeID int    `json:"globalTradeID"`
+	TradeID       int    `json:"tradeID"`
+	Date          string `json:"date"`
+	Ttype         string `json:"type"`
+	Rate          string `json:"rate"`
+	Amount        string `json:"amount"`
+	Total         string `json:"total"`
+	OrderNumber   int    `json:"orderNumber"`
+}
+
+//Currency Spread data
 type CurrencyPair struct {
 	ID            int    `json:"id"`
 	Last          string `json:"last"`
@@ -36,17 +51,8 @@ type CurrencyPair struct {
 	High24Hr      string `json:"high24hr"`
 	Low24Hr       string `json:"low24hr"`
 }
-type Last struct {
-	GlobalTradeID int    `json:"globalTradeID"`
-	TradeID       int    `json:"tradeID"`
-	Date          string `json:"date"`
-	Ttype         string `json:"type"`
-	Rate          string `json:"rate"`
-	Amount        string `json:"amount"`
-	Total         string `json:"total"`
-	OrderNumber   int    `json:"orderNumber"`
-}
 
+//User Portfolio Info
 type Portfolio struct {
 	TradingPair string
 	Cash        float64
@@ -138,21 +144,21 @@ func trade(p Portfolio, mov int) Portfolio {
 	//
 	if moving < last && !p.IsLong && !p.IsShort && last > prev {
 		fmt.Println(p.TradingPair)
-		fmt.Println("ENTER SHORT AT: " + spreadInfo.HighestBid)
 		last, _ := strconv.ParseFloat(spreadInfo.HighestBid, 64)
+		fmt.Printf("ENTER SHORT AT: $%.3f | %s \n", last, time.Now().Format("2006-01-02 15:04:05"))
 		p.Position = last
 		p.IsShort = true
 	} else if last < moving && !p.IsLong && !p.IsShort && last < prev {
 		fmt.Println(p.TradingPair)
-		fmt.Println("ENTER BUY AT: " + spreadInfo.LowestAsk)
 		last, _ := strconv.ParseFloat(spreadInfo.LowestAsk, 64)
+		fmt.Printf("ENTER BUY AT: $%.3f | %s \n", last, time.Now().Format("2006-01-02 15:04:05"))
 		p.Position = last
 		p.Cash = p.Cash - last
 		p.IsLong = true
 	} else if (last < moving || p.Position-last > 10) && p.IsLong && !p.IsShort {
 		fmt.Println(p.TradingPair)
-		fmt.Println("EXIT SELL AT: " + spreadInfo.HighestBid)
 		last, _ := strconv.ParseFloat(spreadInfo.HighestBid, 64)
+		fmt.Printf("EXIT SELL AT: $%.3f | %s \n", last, time.Now().Format("2006-01-02 15:04:05"))
 		pr := last - p.Position
 		p.Cash = last + p.Cash
 		p.Profit = p.Cash - p.InitalCash
@@ -161,8 +167,8 @@ func trade(p Portfolio, mov int) Portfolio {
 
 	} else if (last < moving || last-p.Position > 10) && !p.IsLong && p.IsShort {
 		fmt.Println(p.TradingPair)
-		fmt.Println("EXIT BUY AT: " + spreadInfo.LowestAsk)
 		last, _ := strconv.ParseFloat(spreadInfo.LowestAsk, 64)
+		fmt.Printf("EXIT BUY AT: $%.3f | %s \n", last, time.Now().Format("2006-01-02 15:04:05"))
 		pr := p.Position - last
 		p.Position = p.Position - last
 		p.Cash = p.Cash + p.Position
@@ -193,6 +199,7 @@ func main() {
 	fmt.Println("Status: Online")
 	btc := createPortfolio("USDT_BTC", 10000.00)
 	eth := createPortfolio("USDT_ETH", 1000.00)
+	fmt.Printf("Currently Trading: %s, %s\n", btc.TradingPair, eth.TradingPair)
 	//using the last 199 trades as moving average
 	m := 199
 	for {
